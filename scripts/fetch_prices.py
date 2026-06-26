@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
 TBH Hub - Steam Market Price Fetcher
-Runs via GitHub Actions every 2h, publishes prices.json to the repo.
-The Electron app reads this file instead of calling Steam directly,
-avoiding rate limits and making inventory valuation instantaneous.
+Fetches all TBH item prices from Steam Market in USD (the only currency
+reliably returned by the bulk search/render endpoint).
+The app converts to local currency for display using exchange rates.
 """
 
 import json
@@ -15,16 +15,7 @@ from datetime import datetime, timezone
 
 APPID = 3678970
 BATCH_SIZE = 100
-DELAY_BETWEEN_BATCHES = 8  # seconds — conservative to avoid 429
-
-# All currencies to fetch. The app picks the right one based on user region.
-# Codes: 1=USD, 7=BRL, 3=EUR, 2=GBP
-CURRENCIES = {
-    "USD": 1,
-    "BRL": 7,
-    "EUR": 3,
-    "GBP": 2,
-}
+DELAY_BETWEEN_BATCHES = 8
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
@@ -32,44 +23,47 @@ HEADERS = {
 }
 
 
-def fetch_batch(start: int, currency_code: int) -> list[dict]:
-    """Fetch one page of market listings."""
+def fetch_batch(start: int) -> tuple[list, int]:
+    """Fetch one page of market listings. Returns (results, total_count)."""
     url = (
         f"https://steamcommunity.com/market/search/render/"
         f"?appid={APPID}&norender=1"
         f"&count={BATCH_SIZE}&start={start}"
-        f"&currency={currency_code}&language=english"
+        f"&currency=1&language=english"
     )
     req = urllib.request.Request(url, headers=HEADERS)
     try:
         with urllib.request.urlopen(req, timeout=15) as r:
             if r.status == 429:
-                print(f"  429 rate limited at start={start}, waiting 30s...")
+                print(f"  429 at start={start}, waiting 30s...")
                 time.sleep(30)
-                return fetch_batch(start, currency_code)  # retry once
+                return fetch_batch(start)
             data = json.loads(r.read().decode())
-            return data.get("results", [])
+            return data.get("results", []), data.get("total_count", 0)
     except urllib.error.HTTPError as e:
         if e.code == 429:
             print(f"  429 at start={start}, waiting 30s...")
             time.sleep(30)
-            return fetch_batch(start, currency_code)
-        print(f"  HTTP error {e.code} at start={start}")
-        return []
+            return fetch_batch(start)
+        return [], 0
     except Exception as e:
         print(f"  Error at start={start}: {e}")
-        return []
+        return [], 0
 
 
-def fetch_all_prices(currency_code: int) -> dict[str, dict]:
-    """Fetch all tradable items for a given currency. Returns {hash_name: {sell, median}}."""
+def main():
+    print(f"TBH Hub Price Fetcher — {datetime.now(timezone.utc).isoformat()}")
+    
     prices = {}
     start = 0
-    total_fetched = 0
+    total_count = None
 
-    print(f"  Fetching currency={currency_code}...")
     while True:
-        batch = fetch_batch(start, currency_code)
+        batch, count = fetch_batch(start)
+        if total_count is None:
+            total_count = count
+            print(f"Total items on market: {total_count}")
+        
         if not batch:
             break
 
@@ -78,54 +72,50 @@ def fetch_all_prices(currency_code: int) -> dict[str, dict]:
             if not name:
                 continue
             prices[name] = {
-                "sell": item.get("sell_price", 0),          # cents
+                "sell": item.get("sell_price", 0),
                 "sell_text": item.get("sell_price_text", ""),
                 "listings": item.get("sell_listings", 0),
             }
 
-        total_fetched += len(batch)
-        print(f"    batch start={start}: {len(batch)} items (total: {total_fetched})")
+        print(f"  batch start={start}: {len(batch)} items (total fetched: {len(prices)})")
 
-        if len(batch) < BATCH_SIZE:
-            break  # last page
+        if start + BATCH_SIZE >= total_count or len(batch) < BATCH_SIZE:
+            break
 
         start += BATCH_SIZE
         time.sleep(DELAY_BETWEEN_BATCHES)
 
-    return prices
+    # Fetch USD/BRL exchange rate from a free public API
+    exchange_rates = {}
+    try:
+        rate_req = urllib.request.Request(
+            "https://open.er-api.com/v6/latest/USD",
+            headers={"User-Agent": "curl/7.68.0"}
+        )
+        with urllib.request.urlopen(rate_req, timeout=10) as r:
+            rate_data = json.loads(r.read())
+            rates = rate_data.get("rates", {})
+            exchange_rates = {
+                "BRL": rates.get("BRL"),
+                "EUR": rates.get("EUR"),
+                "GBP": rates.get("GBP"),
+            }
+            print(f"Exchange rates (USD base): {exchange_rates}")
+    except Exception as e:
+        print(f"  Could not fetch exchange rates: {e}")
 
-
-def main():
-    print(f"TBH Hub Price Fetcher — {datetime.now(timezone.utc).isoformat()}")
-    print(f"Fetching {len(CURRENCIES)} currencies from Steam Market (appid={APPID})...")
-
-    all_prices = {}  # { currency_code: { hash_name: {...} } }
-
-    for currency_name, currency_code in CURRENCIES.items():
-        print(f"\n[{currency_name}]")
-        prices = fetch_all_prices(currency_code)
-        all_prices[str(currency_code)] = prices
-        print(f"  Done: {len(prices)} items")
-
-        # Pause between currencies to be respectful to Steam
-        if currency_code != list(CURRENCIES.values())[-1]:
-            print(f"  Waiting {DELAY_BETWEEN_BATCHES * 2}s before next currency...")
-            time.sleep(DELAY_BETWEEN_BATCHES * 2)
-
-    # Build the output JSON
     output = {
         "updated_at": datetime.now(timezone.utc).isoformat(),
         "appid": APPID,
-        "currencies": list(CURRENCIES.keys()),
-        "prices": all_prices,
+        "currency": "USD",
+        "exchange_rates": exchange_rates,
+        "prices": prices,
     }
 
     with open("prices.json", "w", encoding="utf-8") as f:
         json.dump(output, f, ensure_ascii=False, separators=(",", ":"))
 
-    total_items = len(all_prices.get("1", {}))
-    print(f"\nDone! {total_items} items written to prices.json")
-    print(f"Updated at: {output['updated_at']}")
+    print(f"\nDone! {len(prices)} items written to prices.json")
 
 
 if __name__ == "__main__":
