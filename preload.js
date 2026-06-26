@@ -1,0 +1,2 @@
+const {contextBridge,ipcRenderer}=require("electron");contextBridge.exposeInMainWorld("tbh",{readSave:()=>ipcRenderer.invoke("read-save"),saveExists:()=>ipcRenderer.invoke("save-exists"),getSavePath:()=>ipcRenderer.invoke("get-save-path"),onSaveUpdated:(cb)=>ipcRenderer.on("save-updated",(_,arr)=>cb(arr)),
+  onBoxOpened:(cb)=>ipcRenderer.on("box-opened",(_,count)=>cb(count)),minimize:()=>ipcRenderer.send("win-min"),maximize:()=>ipcRenderer.send("win-max"),close:()=>ipcRenderer.send("win-close"),});
