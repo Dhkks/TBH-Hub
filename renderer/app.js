@@ -614,8 +614,9 @@ async function loadRemotePrices() {
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const data = await r.json();
     remotePricesCache = data.prices || {};
+    remotePricesCache._exchange_rates = data.exchange_rates || {};
     remotePricesFetchedAt = now;
-    console.log('[tbh] remote prices loaded:', Object.keys(remotePricesCache['1'] || {}).length, 'items, updated:', data.updated_at);
+    console.log('[tbh] remote prices loaded:', Object.keys(remotePricesCache).length - 1, 'items, updated:', data.updated_at);
     return remotePricesCache;
   } catch(e) {
     console.warn('[tbh] remote prices unavailable, falling back to Steam API:', e.message);
@@ -625,11 +626,30 @@ async function loadRemotePrices() {
 
 function getRemotePrice(prices, hashName, currencyCode) {
   if (!prices) return null;
-  const byCode = prices[String(currencyCode)];
-  if (!byCode) return null;
-  const entry = byCode[hashName];
+  // prices.json stores USD prices + exchange_rates for conversion
+  const entry = prices[hashName];
   if (!entry || entry.sell <= 0) return null;
-  return { sellCents: entry.sell, listed: entry.sell_text, listings: entry.listings };
+
+  // Convert from USD cents to local currency
+  const rates = remotePricesCache._exchange_rates || {};
+  const iso = ISO_CURRENCY_BY_STEAM_CODE[currencyCode] || 'USD';
+  const rate = (iso === 'USD') ? 1 : (rates[iso] || null);
+
+  let sellCents = entry.sell;
+  let listed = entry.sell_text;
+
+  if (rate && iso !== 'USD') {
+    sellCents = Math.round(entry.sell * rate);
+    try {
+      listed = new Intl.NumberFormat(navigator.language, {
+        style: 'currency', currency: iso
+      }).format(sellCents / 100);
+    } catch(e) {
+      listed = (sellCents / 100).toFixed(2) + ' ' + iso;
+    }
+  }
+
+  return { sellCents, listed, listings: entry.listings };
 }
 
 // ── STEAM INVENTORY VALUE ──
@@ -858,7 +878,8 @@ async function calcInventoryValue() {
     }
 
     if (remotePrices) {
-      // Remote prices available: populate cache instantly from the JSON file
+      // Remote prices available: populate cache instantly from the JSON file.
+      // Prices are in USD with exchange rates for conversion to local currency.
       for (const hashName of hashNames) {
         if (getCachedPrice(hashName)) continue;
         const remote = getRemotePrice(remotePrices, hashName, currency);
