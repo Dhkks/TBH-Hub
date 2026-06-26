@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>TBH Hub</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+
+  <div class="titlebar">
+    <div class="tbar-left">
+      <div class="live-ind" id="liveInd"><div class="live-dot"></div><span id="liveIndText">offline</span></div>
+      <span class="tsep">/</span>
+      <span class="tlogo">TBH HUB</span>
+      <span class="tsep">/</span>
+      <span class="tpage" id="titlePage">live</span>
+    </div>
+    <div class="tbar-right">
+      <div class="wb y" id="btnMin"></div>
+      <div class="wb g" id="btnMax"></div>
+      <div class="wb r" id="btnClose"></div>
+    </div>
+  </div>
+
+  <div class="nav">
+    <button class="tab on" data-tab="live">LIVE</button>
+    <button class="tab" data-tab="farm">FARM</button>
+    <button class="tab" data-tab="stats">STATS</button>
+    <button class="tab" data-tab="steam">STEAM</button>
+    <button class="tab" data-tab="alerts">ALERTS</button>
+    <button class="tab" data-tab="config">CONFIG</button>
+  </div>
+
+  <div class="content">
+
+    <!-- LIVE -->
+    <div class="pane on" id="pane-live">
+      <div id="noSaveScreen" class="no-save">
+        <div class="ns-logo">TBH HUB</div>
+        <div class="ns-msg">Save File não encontrado.<br>Open Taskbar Hero to generate the Save File.</div>
+        <div class="ns-path" id="nsSavePath"></div>
+        <button class="btn primary" id="btnRetry">retry</button>
+      </div>
+      <div id="liveContent" style="display:none">
+        <div class="row-lbl">Current session <span id="liveLastUpdate">—</span></div>
+        <div class="grid2">
+          <div class="cell">
+            <div class="cell-lbl">XP / HOUR</div>
+            <div class="cell-big exp" id="liveXPHr">—</div>
+            <div class="cell-sub" id="liveXPSub">waiting...</div>
+          </div>
+          <div class="cell">
+            <div class="cell-lbl">GOLD / HOUR</div>
+            <div class="cell-big gold" id="liveGoldHr">—</div>
+            <div class="cell-sub" id="liveGoldSub">—</div>
+          </div>
+        </div>
+        <div class="inv-bar">
+          <div style="flex:1">
+            <div class="inv-lbl">STEAM INVENTORY VALUE</div>
+            <div style="display:flex;align-items:baseline;gap:16px;margin-top:4px">
+              <div>
+                <div style="font-size:18px;font-weight:700;color:var(--gold)" id="invValue">—</div>
+                <div style="font-size:10px;color:var(--mut)">listed value</div>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+            <span class="tag" id="invCount">— items</span>
+          </div>
+        </div>
+        <div class="row-lbl">character <span id="liveHeroSub">—</span></div>
+        <div class="grid3">
+          <div class="cell">
+            <div class="cell-lbl">LEVEL</div>
+            <div class="cell-mid" id="liveLevel">—</div>
+            <div class="cell-sub">Party max</div>
+          </div>
+          <div class="cell">
+            <div class="cell-lbl">EXP BONUS</div>
+            <div class="cell-mid exp" id="liveExpBonus">—</div>
+            <div class="cell-sub">From runes</div>
+          </div>
+          <div class="cell">
+            <div class="cell-lbl">GOLD BONUS</div>
+            <div class="cell-mid gold" id="liveGoldBonus">—</div>
+            <div class="cell-sub">From runes</div>
+          </div>
+        </div>
+        <div class="row-lbl">Session</div>
+        <div class="grid3">
+          <div class="cell">
+            <div class="cell-lbl">CHESTS OPENED</div>
+            <div class="cell-mid" id="liveBoxes">0</div>
+            <div class="cell-sub">This session</div>
+          </div>
+          <div class="cell">
+            <div class="cell-lbl">PLAY TIME</div>
+            <div class="cell-mid" id="livePlayTime">—</div>
+            <div class="cell-sub">Total</div>
+          </div>
+          <div class="cell">
+            <div class="cell-lbl">SESSION</div>
+            <div class="cell-mid" id="liveSession">—</div>
+            <div class="cell-sub">Active time</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FARM -->
+    <div class="pane" id="pane-farm">
+      <div class="hero-bar">
+        <span class="hero-lbl">HERO</span>
+        <select id="heroSelect"><option>carregando...</option></select>
+      </div>
+      <div class="row-lbl">stats</div>
+      <div class="farm3">
+        <div class="fc">
+          <div class="fc-type">↑ MAX EXP</div>
+          <div class="fc-stage" id="fc-exp-stage">—</div>
+          <div class="fc-name"  id="fc-exp-name">—</div>
+          <div class="fc-diff"  id="fc-exp-diff"></div>
+          <div class="fc-rate"  id="fc-exp-rate">—</div>
+        </div>
+        <div class="fc">
+          <div class="fc-type">↑ MAX GOLD</div>
+          <div class="fc-stage" id="fc-gold-stage">—</div>
+          <div class="fc-name"  id="fc-gold-name">—</div>
+          <div class="fc-diff"  id="fc-gold-diff"></div>
+          <div class="fc-rate"  id="fc-gold-rate">—</div>
+        </div>
+        <div class="fc">
+          <div class="fc-type">⚖ BALANCE</div>
+          <div class="fc-stage" id="fc-bal-stage">—</div>
+          <div class="fc-name"  id="fc-bal-name">—</div>
+          <div class="fc-diff"  id="fc-bal-diff"></div>
+          <div class="fc-rate"  id="fc-bal-rate">—</div>
+        </div>
+      </div>
+
+      <div class="row-lbl">route <span id="calStatusText" style="font-family:var(--px)"></span></div>
+
+      <!-- 1-1 fixo -->
+      <div class="cal-card">
+        <div class="cal-card-body">
+          <div class="cal-tag-wrap">
+            <span class="cal-tag">1-1</span>
+          </div>
+          <div class="cal-card-info">
+            <div class="cal-card-name">Pasture</div>
+            <div class="cal-card-sub" style="color:var(--mut)">Normal · Lv 1</div>
+          </div>
+          <div class="cal-card-inp">
+            <input type="number" id="cal11" placeholder="seg" min="1">
+          </div>
+        </div>
+      </div>
+
+      <!-- Max -->
+      <div class="cal-card">
+        <div class="cal-card-body">
+          <div class="cal-tag-wrap">
+            <span class="cal-tag cal-tag-max">Max</span>
+          </div>
+          <div class="cal-card-info">
+            <select class="cal-name-select" id="calMaxSelect">
+              <option value="">— escolha o stage máximo —</option>
+            </select>
+            <div class="cal-card-sub" id="calMaxSub"></div>
+          </div>
+          <div class="cal-card-inp">
+            <input type="number" id="calMaxTime" placeholder="seg" min="1">
+          </div>
+        </div>
+      </div>
+
+      <!-- Extra stages -->
+      <div id="calExtraList"></div>
+
+      <div class="cal-actions">
+        <button class="cal-action-btn" id="btnSuggestCal">Suggest</button>
+        <button class="cal-action-btn" id="btnAddCal">Add Stage</button>
+        <span class="cal-hint" id="calHint" style="flex:1;font-size:10px;color:var(--dim)"></span>
+        <button class="cal-action-btn" id="btnResetCal">Clear</button>
+      </div>
+
+      <div class="sort-bar">
+        <button class="sort-btn" id="sortBtnExp" style="color:var(--exp)">EXP/H</button>
+        <button class="sort-btn" id="sortBtnGold">GOLD/H</button>
+        <button class="sort-btn" id="sortBtnBal">BALANCE</button>
+        <span class="sort-label" id="rankSortLabel">by EXP/h</span>
+      </div>
+
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>#</th><th>Stage</th>
+              <th class="r">EXP/h</th>
+              <th class="r">Gold/h</th>
+              <th class="r">EXP Kept</th>
+              <th class="r">Clear</th>
+            </tr>
+          </thead>
+          <tbody id="rankBody">
+            <tr><td colspan="6"><div class="empty">calibre para ver ranking</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="pane" id="pane-stats">
+      <div class="row-lbl">Heroes</div>
+      <div id="heroList"><div class="empty">carregando...</div></div>
+      <div class="row-lbl">Runes</div>
+      <div class="grid3">
+        <div class="cell">
+          <div class="cell-lbl">EXP BONUS</div>
+          <div class="cell-mid exp" id="statsExpBonus">—</div>
+          <div class="cell-sub">From runes</div>
+        </div>
+        <div class="cell">
+          <div class="cell-lbl">GOLD BONUS</div>
+          <div class="cell-mid gold" id="statsGoldBonus">—</div>
+          <div class="cell-sub">From runes</div>
+        </div>
+        <div class="cell">
+          <div class="cell-lbl">STAGE</div>
+          <div class="cell-mid" id="statsStage" style="font-size:14px">—</div>
+          <div class="cell-sub" id="statsMaxStage">Max: —</div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- STEAM -->
+    <div class="pane pane-flex" id="pane-steam">
+
+      <!-- Summary bar -->
+      <div class="inv-bar" style="margin-bottom:0;">
+        <div style="flex:1">
+          <div class="inv-lbl">TOTAL VALUE</div>
+          <div style="display:flex;align-items:baseline;gap:12px;margin-top:4px">
+            <div>
+              <div style="font-size:22px;font-weight:700;color:var(--gold)" id="steamTotalValue">—</div>
+              <div style="font-size:10px;color:var(--mut)">listed value</div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+          <span class="tag" id="steamItemCount">— items</span>
+          <span id="steamLastUpdate" style="font-size:9px;color:var(--dim);">—</span>
+        </div>
+      </div>
+
+      <!-- Ranking header + Refresh button on same line -->
+      <div class="row-lbl" style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;">
+        <span>RANKING <span id="invRankStatus" style="font-size:10px;color:var(--sub);font-weight:400;margin-left:6px;"></span></span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span id="steamRefreshStatus" style="font-size:10px;color:var(--mut);"></span>
+          <button id="btnRefreshPrices" style="background:var(--panel2);border:1px solid var(--line2);color:var(--ink);font-family:var(--mono);font-size:9px;padding:3px 10px;cursor:pointer;letter-spacing:0.06em;">↻ REFRESH</button>
+        </div>
+      </div>
+      <div id="invRankList" style="overflow-y:auto;flex:1;height:0;min-height:0;">
+        <div class="empty">loading prices...</div>
+      </div>
+
+    </div>
+
+    <!-- ALERTS -->
+    <div class="pane" id="pane-alerts">
+      <div class="row-lbl">Discord Webhook</div>
+      <div class="cfg-row">
+        <div><div class="cfg-lbl">Webhook URL</div><div class="cfg-sub">Discord channel webhook</div></div>
+        <input id="alertWebhookUrl" type="text" placeholder="https://discord.com/api/webhooks/..." 
+          style="background:var(--panel2);border:1px solid var(--line2);color:var(--ink);font-family:var(--mono);font-size:10px;padding:5px 10px;outline:none;width:220px;flex-shrink:0;">
+      </div>
+      <div class="cfg-row">
+        <div><div class="cfg-lbl">Discord User ID</div><div class="cfg-sub">For mentions (optional)</div></div>
+        <input id="alertUserId" type="text" placeholder="123456789012345678"
+          style="background:var(--panel2);border:1px solid var(--line2);color:var(--ink);font-family:var(--mono);font-size:10px;padding:5px 10px;outline:none;width:180px;flex-shrink:0;">
+      </div>
+      <div class="cfg-row">
+        <div><div class="cfg-lbl">Min Grade</div><div class="cfg-sub">Notify drops at or above</div></div>
+        <select id="alertMinGrade" style="background:var(--panel2);border:1px solid var(--line2);color:var(--ink);font-family:var(--mono);font-size:11px;padding:5px 10px;outline:none;">
+          <option value="LEGENDARY">Legendary</option>
+          <option value="IMMORTAL">Immortal</option>
+          <option value="ARCANA">Arcana</option>
+          <option value="BEYOND">Beyond</option>
+          <option value="CELESTIAL">Celestial</option>
+          <option value="DIVINE">Divine</option>
+          <option value="COSMIC">Cosmic</option>
+        </select>
+      </div>
+      <div class="cfg-row">
+        <div><div class="cfg-lbl">Status</div></div>
+        <div class="cfg-val" id="alertStatus">not configured</div>
+      </div>
+      <div class="row-lbl">Actions</div>
+      <div class="cfg-row">
+        <div><div class="cfg-lbl">Test webhook</div><div class="cfg-sub">Sends a test message</div></div>
+        <button class="btn" id="btnTestWebhook">Test</button>
+      </div>
+      <div class="row-lbl">Recent Drops <span id="alertDropCount">0 This session</span></div>
+      <div id="alertDropList" style="max-height:200px;overflow-y:auto;">
+        <div class="empty">No drops detected yet</div>
+      </div>
+    </div>
+
+    <!-- CONFIG -->
+    <div class="pane" id="pane-config">
+      <div class="row-lbl">Save File</div>
+      <div class="cfg-row">
+        <div><div class="cfg-lbl">Path</div><div class="cfg-sub">Detected automatically</div></div>
+        <div class="cfg-val" id="cfgPath">—</div>
+      </div>
+      <div class="cfg-row">
+        <div><div class="cfg-lbl">Status</div></div>
+        <div class="cfg-val" id="cfgStatus">—</div>
+      </div>
+      <div class="row-lbl">Session</div>
+      <div class="cfg-row">
+        <div><div class="cfg-lbl">Reset session</div><div class="cfg-sub">Clears XP/gold/hr history</div></div>
+        <button class="btn" id="btnResetSession">Reset</button>
+      </div>
+      <div class="row-lbl">About</div>
+      <div class="cfg-row">
+        <div><div class="cfg-lbl">TBH Hub</div><div class="cfg-sub">Fan project · unofficial</div></div>
+        <div class="cfg-val">v0.1.0</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="sbar">
+    <div class="sbar-l">
+      <span id="sbarStatus" class="bad">● no save</span>
+      <span class="sdot">·</span>
+      <span id="sbarStage" class="stage-cur">—</span>
+      <span class="sdot">·</span>
+      <span id="sbarSession">—</span>
+    </div>
+    <div class="sbar-r" id="sbarTime">—</div>
+  </div>
+
+
+  <!-- STAGE PICKER MODAL -->
+  <div id="stagePicker" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;display:none;align-items:center;justify-content:center;">
+    <div style="background:var(--panel);border:1px solid var(--line2);width:420px;max-height:500px;display:flex;flex-direction:column;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--line);flex-shrink:0;">
+        <span style="font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--mut)">Select Stage</span>
+        <button id="closePickerBtn" style="background:transparent;border:none;color:var(--mut);font-size:14px;cursor:pointer;padding:2px 6px;">✕</button>
+      </div>
+      <input id="pickerSearch" type="text" placeholder="search stage..." style="background:var(--bg2);border:none;border-bottom:1px solid var(--line);color:var(--ink);font-family:var(--mono);font-size:12px;padding:10px 16px;outline:none;flex-shrink:0;">
+      <div id="pickerList" style="overflow-y:auto;flex:1;"></div>
+    </div>
+  </div>
+</div>
+<script src="engine/item_catalog.js"></script>
+<script src="engine/engine.js"></script>
+<script src="engine/saveReader.js"></script>
+<script src="engine/liveTracker.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
